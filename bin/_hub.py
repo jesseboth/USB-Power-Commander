@@ -75,9 +75,6 @@ def main():
                         
                 value = "\033[1m"+ value + "\033[0m"
 
-                if(int(port) % 2 == 0):
-                    print(f"\033[48;5;235m", end="")
-
                 print(f"{port_name:<{longest_port_name}}  : {value:<{longest_host_name}}")
 
         if args.host and args.ports:
@@ -94,7 +91,6 @@ def main():
 
             for port in args.ports:
                 index = portNames.index(port)
-                print(index)
                 if args.host == "off":
                     payload["ports"]["set"][index] = {"enable": False}
                 else:

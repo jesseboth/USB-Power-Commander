@@ -1,8 +1,8 @@
 {
   "host0": {
-    "name": "Host 1"
+    "name": "Host-1"
   },
   "host1": {
-    "name": "Host 2"
+    "name": "Host-2"
   }
 }
