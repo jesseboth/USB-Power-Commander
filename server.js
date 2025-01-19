@@ -165,7 +165,8 @@ function reqPorts(ports) {
     // retVal.return {
     //     "0": {
     //         "Name": "Port 1",
-    //         "state": "0"
+    //         "enable": false,
+    //         "select": 0
     //     },
     //     ...
     // }
