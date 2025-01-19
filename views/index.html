@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>USB Power Commander</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="ports">
+    <h2>USB Power Commander</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Port</th>
+                <th>On/Off</th>
+                <th>
+                    <button onclick="openModal('host0-name')">✎</button>
+                    <span id="host0-name">Host 1</span>
+                </th>
+                <th>
+                    <button onclick="openModal('host1-name')">✎</button>
+                    <span id="host1-name">Host 2</span>
+                </th>
+            </tr>
+        </thead>
+        <tbody id="data">
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal -->
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <p>Rename Port:</p>
+        <input type="text" id="new-name" placeholder="Enter new name">
+        <button onclick="renameItem()">Rename</button>
+    </div>
+</div>
+
+<script src="src/scripts.js"></script>
+</body>
+</html>

@@ -63,7 +63,8 @@ const server = http.createServer((req, res) =>  {
 
                 let x = 0;
                 if (data.hasOwnProperty("ports")) { retJson["ports"] = reqPorts(data.ports); delete data.ports;}
-                if (data.hasOwnProperty("portNameChange")) { retJson["portNameChange"] = reqPortNameChange(data.portNameChange); delete data.portNameChange;}
+                if (data.hasOwnProperty("portNames")) { retJson["portNames"] = reqPortNames(data.portNames); delete data.portNames;}
+                if (data.hasOwnProperty("hostNames")) { retJson["hostNames"] = reqHostNames(data.hostNames); delete data.hostNames;}
 
 
                 // Handle invalid data
@@ -156,30 +157,147 @@ const getJsonData = (filePath) => {
     }
 };
 
+const writeJsonData = (filePath, data) => {
+    try {
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+    } catch (err) {
+        console.error(`Error writing file: ${err}`);
+    }
+}
+
+const host = getJsonData('data/host.json');
 const config = getJsonData('data/config.json');
+const gpio = getJsonData('data/hardware.json');
+const status = {};
+for(key in gpio) {
+    status[key] = getJsonData(`data/ports/${key}`);
+}
 
 function reqPorts(ports) {
     retVal = JSON.parse(JSON.stringify(postReturn));
+    retVal.return = {}
 
-    // json structure
-    // retVal.return {
-    //     "0": {
-    //         "Name": "Port 1",
-    //         "enable": false,
-    //         "select": 0
-    //     },
-    //     ...
-    // }
+    
+    if (ports.hasOwnProperty("get")) {
+        if(ports.get.length == undefined){
+            for (key in gpio) {
+                retVal.return[key] = {
+                    "enable": status[key].enable,
+                    "select": status[key].select
+                }
+            }
+        }
+        else {
+            for (key in ports.get) {
+                if (gpio.hasOwnProperty(key)) {
+                    retVal.return[key] = {
+                        "enable": status[key].enable,
+                        "select": status[key].select
+                    }
+                }
+            }
+        }
+    }
+    else if (ports.hasOwnProperty("set")) {
+        for (key in ports.set) {
+            if (gpio.hasOwnProperty(key)) {
+                if (ports[key].hasOwnProperty("enable")) {
+                    status[key].enable = ports[key].enable;
+                }
+                if (ports[key].hasOwnProperty("select")) {
+                    status[key].select = ports[key].select;
+                }
+            }
+        }
+    }
+    else {
+        retVal.success = false;
+        retVal.error = "Invalid data: " + Object.keys(ports).map(key => `${key}: ${ports[key]}`).join(", ");
+        return retVal;
+    }
+
+    retVal.success = true;
+    return retVal;
 }
 
-function reqPortNameChange(portNameChange) {
-    // input json structure
-    // {
-    //     "0": "New Name"
-    // }
-
+function reqPortNames(ports) {
     retVal = JSON.parse(JSON.stringify(postReturn));
+    retVal.return = {}
 
+    
+    if (ports.hasOwnProperty("get")) {
+        if(ports.get.length == undefined){
+            for (key in gpio) {
+                retVal.return[key] = {
+                    "name": config[key].name,
+                }
+            }
+        }
+        else {
+            for (key in ports.get) {
+                if (gpio.hasOwnProperty(key)) {
+                    retVal.return[key] = {
+                        "name": config[key].name,
+                    }
+                }
+            }
+        }
+    }
+    else if (ports.hasOwnProperty("set")) {
+        for (key in ports.set) {
+            if (gpio.hasOwnProperty(key)) {
+                config[key].name = ports.set[key];
+            }
+        }
+
+        writeJsonData('data/config.json', config);
+    }
+    else {
+        retVal.success = false;
+        retVal.error = "Invalid data: " + Object.keys(ports).map(key => `${key}: ${ports[key]}`).join(", ");
+        return retVal;
+    }
+
+    retVal.success = true;
+    return retVal;
+}
+
+function reqHostNames(hosts) {
+    retVal = JSON.parse(JSON.stringify(postReturn));
+    retVal.return = {}
+
+    if (hosts.hasOwnProperty("get")) {
+        if(hosts.get.length == undefined){
+            for (key in host) {
+                retVal.return[key] = {
+                    "name": host[key].name,
+                }
+            }
+        }
+        else {
+            for (key in hosts.get) {
+                if (host.hasOwnProperty(key)) {
+                    retVal.return[key] = {
+                        "name": host[key].name,
+                    }
+                }
+            }
+        }
+    }
+    else if (hosts.hasOwnProperty("set")) {
+        for (key in hosts.set) {
+            if (host.hasOwnProperty(key)) {
+                host[key].name = hosts.set[key];
+            }
+        }
+
+        writeJsonData('data/host.json', host);
+    }
+    else {
+        retVal.success = false;
+        retVal.error = "Invalid data: " + Object.keys(hosts).map(key => `${key}: ${hosts[key]}`).join(", ");
+        return retVal;
+    }
 
     retVal.success = true;
     return retVal;
