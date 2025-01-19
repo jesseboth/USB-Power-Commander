@@ -2,6 +2,28 @@
 
 ARGS=""
 
+# Function to display help
+help() {
+    echo ""
+    echo "USB Power Commander"
+    echo ""
+    echo "  Arguments:"
+    echo "    host:  Specify the host to control."
+    echo "    port:  Specify one or more ports to operate on the specified host."
+    echo ""
+    echo "  Environment Variables:"
+    echo "    USB_COMMANDER_IP:  If set, the script uses this IP instead of default settings."
+    echo ""
+    echo "  Usage: hub <host> <port> [...]"
+    echo ""
+}
+
+# Check for help option
+if [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
+    help
+    exit 0
+fi
+
 # check if USB_COMMANDER_IP is set in environment
 if [ ! -z "$USB_COMMANDER_IP" ]; then
     ARGS+=$USB_COMMANDER_IP
@@ -15,6 +37,8 @@ if [ -z "$1" ]; then
 fi
 
 if [ -z $2 ]; then
+    echo "Error: Missing port argument"
+    help
     exit 0
 fi
 
