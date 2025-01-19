@@ -153,18 +153,18 @@ function closeModal() {
 }
 
 function renameItem() {
-    const newName = document.getElementById('new-name').value;
+    const newName = document.getElementById('new-name').value.replace(/\s+/g, '-');
+
     if (currentItem && newName.trim() !== '') {
         const object = currentItem.split('-')[0];
         if(object.startsWith('host')) {
             hostNames[object] = newName;
-            postToServer('hostNames', {"set": {[object]: newName}});
+            ret = postToServer('hostNames', {"set": {[object]: newName}});
         } else {
             portNames[object] = newName;
-            postToServer('portNames', {"set": {[object]: newName}});
+            ret = postToServer('portNames', {"set": {[object]: newName}});
         }
 
-        // const target = document.querySelector(`th:contains(${currentItem.charAt(0).toUpperCase() + currentItem.slice(1)})`);
         const target = document.getElementById(currentItem);
         if (target) {
             target.textContent = newName + ' ';
