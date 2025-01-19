@@ -201,13 +201,15 @@ function reqPorts(ports) {
     else if (ports.hasOwnProperty("set")) {
         for (key in ports.set) {
             if (gpio.hasOwnProperty(key)) {
-                if (ports[key].hasOwnProperty("enable")) {
-                    status[key].enable = ports[key].enable;
+                if (ports.set[key].hasOwnProperty("enable")) {
+                    status[key].enable = ports.set[key].enable;
                 }
-                if (ports[key].hasOwnProperty("select")) {
-                    status[key].select = ports[key].select;
+                if (ports.set[key].hasOwnProperty("select")) {
+                    status[key].select = ports.set[key].select;
                 }
             }
+
+            writeJsonData(`data/ports/${key}`, status[key]);
         }
     }
     else {

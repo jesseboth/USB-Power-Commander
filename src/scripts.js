@@ -74,12 +74,10 @@ async function createButtonListener(name, initial){
 
     // Add event listener to the switch
     document.getElementById(id).addEventListener('change', function() {
-
-        // TODO: send to server
         if (this.checked) {
-            console.log(id, 'is ON');
+            postToServer('ports', {"set": {[name]: {"enable": true}}});
         } else {
-            console.log(id, 'is OFF');
+            postToServer('ports', {"set": {[name]: {"enable": false}}});
         }
     });
 
@@ -91,27 +89,10 @@ async function createRadioListener(name, initial){
         // Prevent event firing when clicking on input elements
 
         if(event.target.type == "radio") {
-            console.log(event.target.name, "select: ", event.target.value);
+            postToServer('ports', {"set": {[name]: {"select": parseInt(event.target.value)}}});
         }
     });
 }
-
-// document.addEventListener('DOMContentLoaded', function() {
-//     setupHostSelection();
-// });
-
-// function setupHostSelection() {
-//     const allRadioButtons = document.querySelectorAll('input[type="radio"]');
-
-//     allRadioButtons.forEach(radio => {
-//         console.log(radio.name, radio.value, radio.checked)
-//         radio.addEventListener('change', function() {
-//             if (this.checked) {
-//                 console.log(`Selected Host ${this.value} for ${this.name}`);
-//             }
-//         });
-//     });
-// }
 
 function createPortsTable(ports, portNames) {
     const data = document.getElementById('data');
