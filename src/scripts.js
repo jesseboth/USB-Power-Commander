@@ -138,6 +138,12 @@ currentItem = '';
 function openModal(item) {
     currentItem = item;
     renameValue = item;
+    if(item.startsWith('host')) {
+        document.getElementById('rename').textContent = 'Rename Host';
+    } else {
+        document.getElementById('rename').textContent = 'Rename Port';
+    }
+
     document.getElementById('modal').style.display = 'block';
     document.getElementById('new-name').value = document.getElementById(item).textContent.trim();
 }
@@ -149,8 +155,6 @@ function closeModal() {
 function renameItem() {
     const newName = document.getElementById('new-name').value;
     if (currentItem && newName.trim() !== '') {
-        console.log(`Renaming ${currentItem} to ${newName}`); 
-
         const object = currentItem.split('-')[0];
         if(object.startsWith('host')) {
             hostNames[object] = newName;
