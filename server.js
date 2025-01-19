@@ -248,6 +248,11 @@ function reqPortNames(ports) {
     else if (ports.hasOwnProperty("set")) {
         for (key in ports.set) {
             if (gpio.hasOwnProperty(key)) {
+                if(ports.set[key].split(" ") > 1 || ports.set[key].split("\t") > 1){
+                    retVal.success = false;
+                    retVal.error = "Name cannot contain spaces or tabs";
+                    return retVal;
+                }
                 config[key].name = ports.set[key];
             }
         }
@@ -289,6 +294,11 @@ function reqHostNames(hosts) {
     else if (hosts.hasOwnProperty("set")) {
         for (key in hosts.set) {
             if (host.hasOwnProperty(key)) {
+                if(hosts.set[key].split(" ") > 1 || hosts.set[key].split("\t") > 1){
+                    retVal.success = false;
+                    retVal.error = "Name cannot contain spaces or tabs";
+                    return retVal;
+                }
                 host[key].name = hosts.set[key];
             }
         }

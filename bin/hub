@@ -1,0 +1,24 @@
+#!/bin/bash
+
+ARGS=""
+
+# check if USB_COMMANDER_IP is set in environment
+if [ ! -z "$USB_COMMANDER_IP" ]; then
+    ARGS+=$USB_COMMANDER_IP
+fi
+
+SCRIPT=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )/_hub.py
+
+if [ -z "$1" ]; then
+    python3 $SCRIPT --status
+    exit 0
+fi
+
+if [ -z $2 ]; then
+    exit 0
+fi
+
+host=$1
+shift
+
+$SCRIPT --host $host --ports $@
