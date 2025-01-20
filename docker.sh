@@ -5,6 +5,8 @@ PORT="8888"
 SCRIPT_DIR=$(realpath $(dirname "$0"))
 VOLUMES="-v ${SCRIPT_DIR}/data:/usr/src/app/data \
 "
+DEPLOY=""
+CAPS=""
 
 function help() {
     echo "USB Power Commander Docker container:"
@@ -47,7 +49,6 @@ BUILD=FALSE
 STOP=FALSE
 LOG=FALSE
 DAEMON=FALSE
-DEPLOY=""
 if [ ! $# -gt 0 ]; then
     help
     exit 1
@@ -97,6 +98,9 @@ if grep -q "Raspberry Pi" /proc/cpuinfo; then
     print "Running on a Raspberry Pi\n"
     DEPLOY="deploy"
     port=80
+
+    # may need --privileged
+    CAPS="--cap-add SYS_RAWIO" 
 fi
 
 if [ $STOP == TRUE ]; then
@@ -111,10 +115,10 @@ fi
 
 if [ $DAEMON == TRUE ]; then
     print "Starting daemon container"
-    run docker run -d $VOLUMES -p $PORT:8888 --restart always --name "$CONTAINERNAME" "$IMAGENAME" $DEPLOY
+    run docker run $CAPS -d $VOLUMES -p $PORT:8888 --restart always --name "$CONTAINERNAME" "$IMAGENAME" $DEPLOY
 elif [ $BUILD = TRUE ]; then
     print "Starting container"
-    run docker run -d $VOLUMES -p $PORT:8888 --name "$CONTAINERNAME" "$IMAGENAME" $DEPLOY
+    run docker run $CAPS -d $VOLUMES -p $PORT:8888 --name "$CONTAINERNAME" "$IMAGENAME" $DEPLOY
 fi
 
 if [ $LOG == TRUE ]; then
