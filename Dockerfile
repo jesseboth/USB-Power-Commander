@@ -10,6 +10,7 @@ RUN npm install
 
 COPY . .
 
-EXPOSE 8000
+EXPOSE 8888
 
-CMD ["node", "server.js"]
+ENTRYPOINT ["npm", "run"]
+CMD ["start"]

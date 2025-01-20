@@ -1,6 +1,6 @@
 IMAGENAME="usb-power-commander-server"
 CONTAINERNAME="${IMAGENAME}-container"
-PORT="4000"
+PORT="8888"
 
 SCRIPT_DIR=$(realpath $(dirname "$0"))
 VOLUMES="-v ${SCRIPT_DIR}/data:/usr/src/app/data \
@@ -47,6 +47,7 @@ BUILD=FALSE
 STOP=FALSE
 LOG=FALSE
 DAEMON=FALSE
+DEPLOY=""
 if [ ! $# -gt 0 ]; then
     help
     exit 1
@@ -92,6 +93,12 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+if grep -q "Raspberry Pi" /proc/cpuinfo; then
+    print "Running on a Raspberry Pi\n"
+    DEPLOY="deploy"
+    port=80
+fi
+
 if [ $STOP == TRUE ]; then
     print "Stopping container"
     run "docker stop $CONTAINERNAME; docker rm $CONTAINERNAME"
@@ -104,10 +111,10 @@ fi
 
 if [ $DAEMON == TRUE ]; then
     print "Starting daemon container"
-    run docker run -d $VOLUMES -p $PORT:8888 --restart always --name "$CONTAINERNAME" "$IMAGENAME"
+    run docker run -d $VOLUMES -p $PORT:8888 --restart always --name "$CONTAINERNAME" "$IMAGENAME" $DEPLOY
 elif [ $BUILD = TRUE ]; then
     print "Starting container"
-    run docker run -d $VOLUMES -p $PORT:8888 --name "$CONTAINERNAME" "$IMAGENAME"
+    run docker run -d $VOLUMES -p $PORT:8888 --name "$CONTAINERNAME" "$IMAGENAME" $DEPLOY
 fi
 
 if [ $LOG == TRUE ]; then

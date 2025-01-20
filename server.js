@@ -4,6 +4,10 @@ const fs = require('fs');
 const fsPromises = require('fs').promises;
 const { spawn } = require('child_process');
 const port = process.env.PORT || 8888;
+const deploy = process.env.DEPLOY || false;
+const debugCheck = process.env.DEBUG || false;
+
+const pi = deploy ? require('rpi-gpio') : null;
 
 // Template for the return objects
 const postReturn = {
@@ -17,6 +21,7 @@ const { DefaultDeserializer } = require('v8');
 const { error } = require('console');
 class Emitter extends EventEmitter { };
 const myEmitter = new Emitter();
+
 const serveFile = async (filePath, contentType, response) => {
     try {
         const rawData = await fsPromises.readFile(
@@ -165,13 +170,19 @@ const writeJsonData = (filePath, data) => {
     }
 }
 
+let piGpioInitOnce = false;
+let piGpioSetOnce = false;
+
 const host = getJsonData('data/host.json');
 const config = getJsonData('data/config.json');
 const gpio = getJsonData('data/hardware.json');
 const status = {};
+piGpioInit();
 for(key in gpio) {
     status[key] = getJsonData(`data/ports/${key}`);
+    piGpioSet(key, status[key].enable, status[key].select);
 }
+
 
 function reqPorts(ports) {
     retVal = JSON.parse(JSON.stringify(postReturn));
@@ -179,6 +190,7 @@ function reqPorts(ports) {
 
     
     if (ports.hasOwnProperty("get")) {
+        debug("Getting ports");
         if(ports.get.length == undefined){
             for (key in gpio) {
                 retVal.return[key] = {
@@ -207,6 +219,8 @@ function reqPorts(ports) {
                 if (ports.set[key].hasOwnProperty("select")) {
                     status[key].select = ports.set[key].select;
                 }
+
+                piGpioSet(key, status[key].enable, status[key].select);
             }
 
             writeJsonData(`data/ports/${key}`, status[key]);
@@ -228,6 +242,7 @@ function reqPortNames(ports) {
 
     
     if (ports.hasOwnProperty("get")) {
+        debug("Getting port names");
         if(ports.get.length == undefined){
             for (key in gpio) {
                 retVal.return[key] = {
@@ -248,6 +263,7 @@ function reqPortNames(ports) {
     else if (ports.hasOwnProperty("set")) {
         for (key in ports.set) {
             if (gpio.hasOwnProperty(key)) {
+                debug("Setting port", key, "to:", ports.set[key]);
                 if(ports.set[key].split(" ").length > 1 || ports.set[key].split("\t").length > 1){
                     retVal.success = false;
                     retVal.error = "Name cannot contain spaces or tabs";
@@ -274,6 +290,7 @@ function reqHostNames(hosts) {
     retVal.return = {}
 
     if (hosts.hasOwnProperty("get")) {
+        debug("Getting host names");
         if(hosts.get.length == undefined){
             for (key in host) {
                 retVal.return[key] = {
@@ -294,6 +311,7 @@ function reqHostNames(hosts) {
     else if (hosts.hasOwnProperty("set")) {
         for (key in hosts.set) {
             if (host.hasOwnProperty(key)) {
+                debug("Setting host", key, "to:", hosts.set[key]);
                 if(hosts.set[key].split(" ").length > 1 || hosts.set[key].split("\t").length > 1){
                     retVal.success = false;
                     retVal.error = "Name cannot contain spaces or tabs";
@@ -313,4 +331,54 @@ function reqHostNames(hosts) {
 
     retVal.success = true;
     return retVal;
+}
+
+function piGpioInit() {
+    if(pi == null || !deploy) {
+        if(!piGpioInitOnce) {
+            console.error("Cannot initialize GPIO pins on non-deployed server");
+            piGpioInitOnce = true;
+        }
+        return;
+    }
+
+    for (key in gpio) {
+        pi.setup(gpio[key].pin, pi.DIR_OUT, (err) => {
+            if (err) {
+                console.error(`Error setting up pin ${gpio[key].pin}: ${err}`);
+            }
+        });
+    }
+}
+
+function piGpioSet(port, en, sel) {
+    debug(`setting port ${port} en ${gpio[port].en} to ${en ? "HIGH" : "LOW"}`);
+    debug(`setting port ${port} sel ${gpio[port].sel} to ${sel ? "HIGH" : "LOW"}`);
+
+
+    if(pi == null || !deploy) {
+        if(!piGpioSetOnce) {
+            console.error("Cannot set GPIO pins on non-deployed server");
+            piGpioSetOnce = true;
+        }
+        return;
+    }
+
+    pi.write(gpio[port].en, en ? pi.HIGH : pi.LOW, (err) => {
+        if (err) {
+            console.error(`Error setting port ${port} en ${gpio[port].en} to ${en ? "HIGH" : "LOW"}: ${err}`);
+        }
+    });
+
+    pi.write(gpio[port].sel, sel ? pi.HIGH : pi.LOW, (err) => {
+        if (err) {
+            console.error(`Error setting port ${port} sel ${gpio[port].sel} to ${sel ? "HIGH" : "LOW"}: ${err}`);
+        }
+    });
+}
+
+function debug(msg, ...args) {
+    if(debugCheck){
+        console.log(msg, ...args);
+    }
 }
