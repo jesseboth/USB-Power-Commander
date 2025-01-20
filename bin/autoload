@@ -10,10 +10,10 @@ _hub() {
 
     if [ "$COMP_CWORD" -eq 1 ]; then
         # First argument: hosts
-        COMPREPLY=($(compgen -W "$(_hub.py --hostNames | tr '\n' ' ') off" -- "$cur"))
-    elif [ "$COMP_CWORD" -eq 2 ]; then
+        COMPREPLY=($(compgen -W "$(_hub.py --hostNames) off" -- "$cur"))
+    elif [ "$COMP_CWORD" -gt 1 ]; then
         # Second argument: ports
-        COMPREPLY=($(compgen -W "$(_hub.py --portNames | tr '\n' ' ')" -- "$cur"))
+        COMPREPLY=($(compgen -W "$(_hub.py --portNames)" -- "$cur"))
     fi
 }
 

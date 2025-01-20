@@ -164,7 +164,7 @@ const getJsonData = (filePath) => {
 
 const writeJsonData = (filePath, data) => {
     try {
-        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 4));
     } catch (err) {
         console.error(`Error writing file: ${err}`);
     }

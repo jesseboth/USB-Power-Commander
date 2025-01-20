@@ -42,13 +42,13 @@ def main():
     if(result["success"]):
         if(args.portNames):
             for port in result["portNames"]["return"]:
-                print(result["portNames"]["return"][port]["name"])
+                print(result["portNames"]["return"][port]["name"], end=" ")
         else:
             for port in result["portNames"]["return"]:
                 portNames.append(result["portNames"]["return"][port]["name"])
         if(args.hostNames):
             for host in result["hostNames"]["return"]:
-                print(result["hostNames"]["return"][host]["name"])
+                print(result["hostNames"]["return"][host]["name"], end=" ")
         else:
             for host in result["hostNames"]["return"]:
                 hostNames.append(result["hostNames"]["return"][host]["name"])
