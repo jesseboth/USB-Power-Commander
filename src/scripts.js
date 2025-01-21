@@ -135,9 +135,11 @@ function createPortsTable(ports, portNames) {
 }
 
 currentItem = '';
+originalName = '';
+listenerSet = false;
 function openModal(item) {
     currentItem = item;
-    renameValue = item;
+    originalName = document.getElementById(item).textContent.trim();
     if(item.startsWith('host')) {
         document.getElementById('rename').textContent = 'Rename Host';
     } else {
@@ -146,6 +148,22 @@ function openModal(item) {
 
     document.getElementById('modal').style.display = 'block';
     document.getElementById('new-name').value = document.getElementById(item).textContent.trim();
+    document.getElementById('new-name').focus();
+    document.getElementById('new-name').select();
+
+    if(!listenerSet) {
+        listenerSet = true;
+        document.getElementById('new-name').addEventListener('keyup', function(event) {
+            console.log("here")
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                renameItem();
+                
+                // turn off listener
+                document.getElementById('new-name').removeEventListener('keyup', this);
+            }
+        });
+    }
 }
 
 function closeModal() {
@@ -157,12 +175,16 @@ function renameItem() {
 
     if (currentItem && newName.trim() !== '') {
         const object = currentItem.split('-')[0];
-        if(object.startsWith('host')) {
+
+        let different = newName !== originalName;
+        if(different && object.startsWith('host')) {
             hostNames[object] = newName;
             ret = postToServer('hostNames', {"set": {[object]: newName}});
-        } else {
+        } else if(different) {
             portNames[object] = newName;
             ret = postToServer('portNames', {"set": {[object]: newName}});
+        } else {
+            console.log('No change');
         }
 
         const target = document.getElementById(currentItem);
@@ -170,5 +192,38 @@ function renameItem() {
             target.textContent = newName + ' ';
             closeModal();
         }
+    }
+}
+
+setInterval(scale, 25);
+function scale() {
+    const body = document.body;
+
+    const minWidth = 250;
+    const maxWidth = 550;
+
+    const minScale = .45;
+    const maxScale = 1;
+
+    // if(window.innerWidth < maxWidth) {
+    //     let scale = (window.innerWidth - minWidth) / (maxWidth - minWidth) * (maxScale - minScale) + minScale;
+    //     body.style.transform = `scale(${scale})`;
+    //     body.style.right = `${(1 - scale) * 50}%`;
+    //     body.style.top = `${(1 - scale) * 50}%`;
+    // }
+
+    if (window.innerWidth < maxWidth) {
+        let scale = ((window.innerWidth - minWidth) / (maxWidth - minWidth)) * (maxScale - minScale) + minScale;
+        body.style.transform = `scale(${scale})`;
+        body.style.transformOrigin = "top left";  // Set transform origin to the top center
+        // body.style.right = `${(1 - scale) * 50}%`;   // Horizontally center the scaled content
+        body.style.position = 'absolute';           // Position absolute to maintain layout
+    } else {
+        body.style.transformOrigin = "top left";  // Set transform origin to the top center
+        body.style.position = 'relative'
+        body.style.transform = `scale(1)`;
+        // Reset transformations and positioning when not scaling
+        // body.style.transform = 'none';
+        // body.style.left = '0';
     }
 }
