@@ -97,7 +97,7 @@ done
 if grep -q "Raspberry Pi" /proc/cpuinfo; then
     print "Running on a Raspberry Pi\n"
     DEPLOY="deploy"
-    port=80
+    PORT=80
 
     # may need --privileged
     CAPS="--cap-add SYS_RAWIO" 

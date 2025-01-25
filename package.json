@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "PORT=8888 DEBUG=true node server.js",
-    "deploy": "PORT=80 DEPLOY=true node server.js"
+    "deploy": "PORT=8888 DEPLOY=true node server.js"
   },
   "author": "Jesse Both",
   "license": "ISC",
