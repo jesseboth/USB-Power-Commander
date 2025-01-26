@@ -7,7 +7,10 @@ const port = process.env.PORT || 8888;
 const deploy = process.env.DEPLOY || false;
 const debugCheck = process.env.DEBUG || false;
 
-const pi = deploy ? require('rpi-gpio') : null;
+let exec;
+if (deploy) {
+    exec = require('child_process').exec;
+}
 
 // Template for the return objects
 const postReturn = {
@@ -19,6 +22,7 @@ const postReturn = {
 const EventEmitter = require('events');
 const { DefaultDeserializer } = require('v8');
 const { error } = require('console');
+const { callbackify } = require('util');
 class Emitter extends EventEmitter { };
 const myEmitter = new Emitter();
 
@@ -177,12 +181,20 @@ const host = getJsonData('data/host.json');
 const config = getJsonData('data/config.json');
 const gpio = getJsonData('data/hardware.json');
 const status = {};
-piGpioInit();
-for(key in gpio) {
-    status[key] = getJsonData(`data/ports/${key}`);
-    piGpioSet(key, status[key].enable, status[key].select);
+if(deploy){
+    piGpioInit().then(() => {
+        for (const key in gpio) {
+            status[key] = getJsonData(`data/ports/${key}`);
+            piGpioSet(key, status[key].enable, status[key].select);
+        }
+    }).catch(error => {
+        console.error("Initialization failed:", error);
+    });
+} else {
+    for (const key in gpio) {
+        status[key] = getJsonData(`data/ports/${key}`);
+    }
 }
-
 
 function reqPorts(ports) {
     retVal = JSON.parse(JSON.stringify(postReturn));
@@ -334,46 +346,71 @@ function reqHostNames(hosts) {
 }
 
 function piGpioInit() {
-    if(pi == null || !deploy) {
-        if(!piGpioInitOnce) {
+    if (!deploy) {
+        if (!piGpioInitOnce) {
             console.error("Cannot initialize GPIO pins on non-deployed server");
             piGpioInitOnce = true;
         }
         return;
     }
 
-    for (key in gpio) {
-        pi.setup(gpio[key].pin, pi.DIR_OUT, (err) => {
-            if (err) {
-                console.error(`Error setting up pin ${gpio[key].pin}: ${err}`);
-            }
+    return new Promise((resolve, reject) => {
+        // Assume some asynchronous initialization logic here
+        // For demonstration, using setTimeout to simulate async behavior
+        
+        Object.keys(gpio).forEach(key => {
+            let commandEn = `pinctrl set ${gpio[key].en} op`; // Set as output
+            let commandSel = `pinctrl set ${gpio[key].sel} op`; // Set as output
+            
+            exec(commandEn, (err, stdout, stderr) => {
+                if (err) {
+                    console.error(`Error setting up pin ${gpio[key].en}: ${err}`);
+                    return;
+                }
+                debug(`Pin ${gpio[key].en} set as output: ${stdout}`);
+            });
+            
+            exec(commandSel, (err, stdout, stderr) => {
+                if (err) {
+                    console.error(`Error setting up pin ${gpio[key].sel}: ${err}`);
+                    return;
+                }
+                debug(`Pin ${gpio[key].sel} set as output: ${stdout}`);
+            });
         });
-    }
+        setTimeout(() => {
+            debug("GPIO initialization completed.");
+            resolve();  // Resolve the promise upon completion
+        }, 1000);
+    });
 }
-
+    
 function piGpioSet(port, en, sel) {
-    debug(`setting port ${port} en ${gpio[port].en} to ${en ? "HIGH" : "LOW"}`);
-    debug(`setting port ${port} sel ${gpio[port].sel} to ${sel ? "HIGH" : "LOW"}`);
-
-
-    if(pi == null || !deploy) {
-        if(!piGpioSetOnce) {
+    if (!deploy) {
+        if (!piGpioSetOnce) {
             console.error("Cannot set GPIO pins on non-deployed server");
             piGpioSetOnce = true;
         }
         return;
     }
 
-    pi.write(gpio[port].en, en ? pi.HIGH : pi.LOW, (err) => {
+    let commandEn = `pinctrl set ${gpio[port].en} ${en ? 'dh' : 'dl'}`;
+    let commandSel = `pinctrl set ${gpio[port].sel} ${sel ? 'dh' : 'dl'}`;
+
+    exec(commandEn, (err, stdout, stderr) => {
         if (err) {
             console.error(`Error setting port ${port} en ${gpio[port].en} to ${en ? "HIGH" : "LOW"}: ${err}`);
+            return;
         }
+        debug(`Port ${port} en ${gpio[port].en} set to ${en ? "HIGH" : "LOW"}: ${stdout}`);
     });
 
-    pi.write(gpio[port].sel, sel ? pi.HIGH : pi.LOW, (err) => {
+    exec(commandSel, (err, stdout, stderr) => {
         if (err) {
             console.error(`Error setting port ${port} sel ${gpio[port].sel} to ${sel ? "HIGH" : "LOW"}: ${err}`);
+            return;
         }
+        debug(`Port ${port} sel ${gpio[port].sel} set to ${sel ? "HIGH" : "LOW"}: ${stdout}`);
     });
 }
 

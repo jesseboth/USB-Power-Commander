@@ -7,6 +7,7 @@ VOLUMES="-v ${SCRIPT_DIR}/data:/usr/src/app/data \
 "
 DEPLOY=""
 CAPS=""
+DEBUG=FALSE
 
 function help() {
     echo "USB Power Commander Docker container:"
@@ -28,7 +29,11 @@ function print() {
 
 function run() {
     # Start the long-running command in the background
-    eval "$@" > /dev/null 2>&1 &
+    if ([ $DEBUG == TRUE ]); then
+        eval "$@"
+    else
+        eval "$@" > /dev/null 2>&1 &
+    fi
     cmd_pid=$!
 
     printf "\033[38;5;27m"
@@ -77,6 +82,10 @@ while [[ $# -gt 0 ]]; do
             DAEMON=TRUE
             shift
         ;;
+        --debug)
+            DEBUG=TRUE
+            shift
+        ;;
         log|logs)
             LOG=TRUE
             shift
@@ -100,7 +109,7 @@ if grep -q "Raspberry Pi" /proc/cpuinfo; then
     PORT=80
 
     # may need --privileged
-    CAPS="--cap-add SYS_RAWIO" 
+    CAPS="--cap-add SYS_RAWIO --privileged"
 fi
 
 if [ $STOP == TRUE ]; then
