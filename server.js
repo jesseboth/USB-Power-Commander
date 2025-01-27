@@ -2,15 +2,10 @@ const http = require('http');
 const path = require('path');
 const fs = require('fs');
 const fsPromises = require('fs').promises;
-const { spawn } = require('child_process');
 const port = process.env.PORT || 8888;
 const deploy = process.env.DEPLOY || false;
 const debugCheck = process.env.DEBUG || false;
-
-let exec;
-if (deploy) {
-    exec = require('child_process').exec;
-}
+const exec = require('child_process').exec;
 
 // Template for the return objects
 const postReturn = {
@@ -20,9 +15,6 @@ const postReturn = {
 }
 
 const EventEmitter = require('events');
-const { DefaultDeserializer } = require('v8');
-const { error } = require('console');
-const { callbackify } = require('util');
 class Emitter extends EventEmitter { };
 const myEmitter = new Emitter();
 
@@ -346,6 +338,7 @@ function reqHostNames(hosts) {
 }
 
 function piGpioInit() {
+    debug("here")
     if (!deploy) {
         if (!piGpioInitOnce) {
             console.error("Cannot initialize GPIO pins on non-deployed server");
